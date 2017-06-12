@@ -1,0 +1,177 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:batch="http://www.springframework.org/schema/batch" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch
+		http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	">
+
+	<import resource="batch-context.xml" />
+	<import resource="batch-database.xml" />
+
+
+	<bean id="customer" class="com.mycompany.model.Customer" />
+	<bean id="customerDao" class="com.mycompany.dao.impl.JdbcCustomerDAO">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+
+	<bean id="databaseItemReader"
+		class="org.springframework.batch.item.database.JdbcCursorItemReader">
+
+		<property name="dataSource" ref="dataSource" />
+
+		<property name="sql" value="SELECT CUST_ID,NAME,AGE FROM Customer" />
+
+		<property name="rowMapper">
+			<bean class="com.mycompany.app.CustomerFieldSetMapper" />
+		</property>
+
+	</bean>
+
+
+	<bean id="flatFileItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
+		scope="step">
+
+		<property name="resource" value="file:csv/customerResult.txt" />
+
+		<property name="lineAggregator">
+
+			<!-- An Aggregator which converts an object into delimited list of strings -->
+			<bean
+				class="org.springframework.batch.item.file.transform.DelimitedLineAggregator">
+
+				<property name="delimiter" value="|" />
+
+				<property name="fieldExtractor">
+
+					<!-- Extractor which returns the value of beans property through reflection -->
+					<bean
+						class="org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor">
+						<property name="names" value="custId, name, age" />
+					</bean>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+
+	<bean id="customerProcessor" class="com.mycompany.processor.CustomerProcessor" />
+	<bean id="jobListener" class="com.mycompany.listener.CustomerJobListener" />
+
+
+	<!-- Read MySql database to write on CSV file -->
+	<batch:job id="readCustomerBatchJob">
+		<batch:step id="step1">
+			<batch:tasklet transaction-manager="transactionManager">
+				<batch:chunk reader="databaseItemReader" writer="flatFileItemWriter"
+					processor="customerProcessor" commit-interval="10" />
+			</batch:tasklet>
+		</batch:step>
+		<batch:listeners>
+			<batch:listener ref="jobListener" />
+		</batch:listeners>
+	</batch:job>
+
+
+	<!-- Read CSV file to write on MySql database -->
+
+
+	<batch:job id="writeCustomerBatchJob">
+		<batch:step id="step2">
+			<batch:tasklet>
+				<batch:chunk reader="cvsFileItemReader" writer="mysqlItemWriter"
+					commit-interval="2">
+				</batch:chunk>
+			</batch:tasklet>
+		</batch:step>
+		<batch:listeners>
+			<batch:listener ref="jobListener" />
+		</batch:listeners>
+	</batch:job>
+
+	<bean id="cvsFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+
+		<!-- Read a csv file -->
+		<property name="resource" value="file:csv/examResult.csv" />
+
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<!-- split it -->
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names" value="name, age" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+					<!-- return back to reader, rather than a mapped object. -->
+					<!-- <bean class="org.springframework.batch.item.file.mapping.PassThroughFieldSetMapper" 
+						/> -->
+					<!-- map to an object -->
+					<bean
+						class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper">
+						<property name="prototypeBeanName" value="customer" />
+					</bean>
+				</property>
+
+			</bean>
+		</property>
+
+	</bean>
+
+	<bean id="mysqlItemWriter"
+		class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+		<property name="dataSource" ref="dataSource" />
+		<property name="sql">
+			<value>
+            <![CDATA[
+            	insert into CUSTOMER(NAME,AGE)
+			values (:name, :age)
+            ]]>
+			</value>
+		</property>
+		<!-- It will take care matching between object property and sql name parameter -->
+		<property name="itemSqlParameterSourceProvider">
+			<bean
+				class="org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider" />
+		</property>
+	</bean>
+
+
+	<!-- read csv file to write on Excel file -->
+
+	<bean name="stockDataReader"
+		class="org.springframework.batch.item.file.FlatFileItemReader">
+		<property name="resource" value="file:csv/companylist.csv" />
+		<property name="lineMapper" ref="stockDataLineMapper" />
+		<property name="linesToSkip" value="1" />
+	</bean>
+
+	<bean name="stockDataLineMapper"
+		class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+		<property name="fieldSetMapper" ref="stockDataFieldMapper" />
+		<property name="lineTokenizer" ref="stockDataLineTokenizer" />
+	</bean>
+
+
+	<bean name="stockDataFieldMapper"
+		class="com.mycompany.app.StockDataFieldSetMapper" />
+
+	<bean name="stockDataLineTokenizer"
+		class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer" />
+		
+	<bean name="stockDataExcelWriter"
+		class="com.mycompany.writer.StockDataExcelWriter" />
+
+
+	<batch:job id="PoiExcelConverter">
+		<batch:step id="convertDataToExcel">
+			<batch:tasklet transaction-manager="transactionManager">
+				<batch:chunk reader="stockDataReader" writer="stockDataExcelWriter"
+					commit-interval="500" />
+			</batch:tasklet>
+		</batch:step>
+	</batch:job>
+
+</beans>
