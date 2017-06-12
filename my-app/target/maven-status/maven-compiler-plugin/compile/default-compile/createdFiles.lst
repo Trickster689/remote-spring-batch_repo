@@ -1,0 +1,12 @@
+com\mycompany\model\Customer.class
+com\mycompany\writer\CustomerWriter.class
+com\mycompany\reader\CustomerReader.class
+com\mycompany\writer\StockDataExcelWriter.class
+com\mycompany\processor\CustomerProcessor.class
+com\mycompany\dao\impl\JdbcCustomerDAO.class
+com\mycompany\dao\CustomerDAO.class
+com\mycompany\model\StockData.class
+com\mycompany\app\CustomerFieldSetMapper.class
+com\mycompany\listener\CustomerJobListener.class
+com\mycompany\app\StockDataFieldSetMapper.class
+com\mycompany\app\App.class
