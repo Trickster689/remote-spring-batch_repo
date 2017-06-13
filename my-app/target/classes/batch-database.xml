@@ -13,8 +13,8 @@
 		<property name="password" value="root" />
 	</bean>
 
-	<bean id="transactionManager"
-		class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+	<!-- <bean id="transactionManager"
+		class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" /> -->
 
 	<jdbc:initialize-database data-source="dataSource">
 		<jdbc:script location="org/springframework/batch/core/schema-drop-mysql.sql" />

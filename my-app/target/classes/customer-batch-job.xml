@@ -8,6 +8,7 @@
 
 	<import resource="batch-context.xml" />
 	<import resource="batch-database.xml" />
+	<import resource="hibernate-config.xml"/>
 
 
 	<bean id="customer" class="com.mycompany.model.Customer" />

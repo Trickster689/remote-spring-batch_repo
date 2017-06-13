@@ -1,0 +1,6 @@
+Customer [age=38, custId=1, name=Eminem]
+Customer [age=22, custId=2, name=Justin]
+Customer [age=28, custId=3, name=Shawn]
+Customer [age=39, custId=15, name=Katy]
+Customer [age=39, custId=16, name=Katy]
+Customer [age=34, custId=17, name=Chris]

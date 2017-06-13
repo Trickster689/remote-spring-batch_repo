@@ -16,12 +16,10 @@ public class App
 {
     public static void main( String[] args )
     {
-    	ApplicationContext context = new ClassPathXmlApplicationContext("customer-batch-job.xml");
-        
+    	ApplicationContext context = new ClassPathXmlApplicationContext("hibernate-customer-batch-job.xml");
         JobLauncher jobLauncher = (JobLauncher) context.getBean("jobLauncher");
 //       Job job = (Job) context.getBean("readCustomerBatchJob");
-        Job job = (Job) context.getBean("PoiExcelConverter");
-      
+        Job job = (Job) context.getBean("hibernateCursorItemReaderJob");
         try {
             JobExecution execution = jobLauncher.run(job, new JobParameters());
             System.out.println("Job Exit Status : "+ execution.getStatus());
