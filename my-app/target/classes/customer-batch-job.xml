@@ -1,14 +1,23 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:batch="http://www.springframework.org/schema/batch" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/batch
+	xmlns:batch="http://www.springframework.org/schema/batch" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:task="http://www.springframework.org/schema/task"
+	 xmlns:context="http://www.springframework.org/schema/context"
+	
+	xsi:schemaLocation="http://www.springframework.org/schema/batch 
 		http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
 		http://www.springframework.org/schema/beans 
 		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
-	">
+		http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.2.xsd
+         http://www.springframework.org/schema/context
+         http://www.springframework.org/schema/context/spring-context.xsd    
+		">
 
 	<import resource="batch-context.xml" />
 	<import resource="batch-database.xml" />
-
+	
+	<context:component-scan base-package="com.mycompany.app"></context:component-scan>
 
 	<bean id="customer" class="com.mycompany.model.Customer" />
 	<bean id="customerDao" class="com.mycompany.dao.impl.JdbcCustomerDAO">
@@ -77,7 +86,7 @@
 	<!-- Read CSV file to write on MySql database -->
 
 
-	<batch:job id="writeCustomerBatchJob">
+	<!-- <batch:job id="writeCustomerBatchJob">
 		<batch:step id="step2">
 			<batch:tasklet>
 				<batch:chunk reader="cvsFileItemReader" writer="mysqlItemWriter"
@@ -88,7 +97,7 @@
 		<batch:listeners>
 			<batch:listener ref="jobListener" />
 		</batch:listeners>
-	</batch:job>
+	</batch:job> -->
 
 	<bean id="cvsFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
 
@@ -165,7 +174,7 @@
 		class="com.mycompany.writer.StockDataExcelWriter" />
 
 
-	<batch:job id="PoiExcelConverter">
+	<!-- <batch:job id="PoiExcelConverter">
 		<batch:step id="convertDataToExcel">
 			<batch:tasklet transaction-manager="transactionManager">
 				<batch:chunk reader="stockDataReader" writer="stockDataExcelWriter"
@@ -173,5 +182,18 @@
 			</batch:tasklet>
 		</batch:step>
 	</batch:job>
+ -->
+<bean id="runScheduler" class="com.mycompany.scheduler.RunScheduler" />
+
+ <!-- Run every 5 seconds -->
+  <task:scheduled-tasks>
+  
+ 	 
+	<task:scheduled ref="runScheduler" method="run" fixed-delay="5000" />
+   
+	<!-- <task:scheduled ref="runScheduler" method="run" cron="*/5 * * * * *" /> -->
+   </task:scheduled-tasks>
+	
+	
 
 </beans>
